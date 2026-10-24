@@ -47,6 +47,7 @@ export const typeDefs = gql`
     reason: String
     summary: String
     engine: String
+    model: String
   }
 
   type SubedeiCall {

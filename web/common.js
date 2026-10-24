@@ -64,6 +64,14 @@ export const SMS_PURPOSE_LABELS = {
   inbound: "Ирсэн",
 };
 
+/** Display name of the AI model that produced a result ("gemma4:e4b" -> "Gemma 4"). */
+export const modelLabel = (model) => {
+  if (!model) return "AI";
+  if (/^gemma4/i.test(model)) return "Gemma 4";
+  if (/^gemma3/i.test(model)) return "Gemma 3";
+  return model;
+};
+
 export const escapeHtml = (value) =>
   String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 

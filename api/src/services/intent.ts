@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { env } from "../config.ts";
 import { OUTCOMES, type Outcome, type Purpose } from "../models.ts";
 import { chat, extractJson } from "./llm.ts";
 
@@ -8,7 +9,9 @@ export type Intent = {
   pickupPerson?: string;
   reason?: string;
   summary: string;
-  engine: "gemma" | "rules";
+  engine: "llm" | "rules";
+  /** LLM_MODEL when engine is "llm" (Gemma 4, oyuLLM…). */
+  model?: string;
 };
 
 export type ReplyContext = {
@@ -64,7 +67,7 @@ const isMongolianSummary = (summary: string) => {
 };
 
 /**
- * Interprets a guardian reply with Gemma, cross-checked by keyword rules.
+ * Interprets a guardian reply with the LLM (Gemma 4 or oyuLLM), cross-checked by keyword rules.
  * The rules only match explicit phrases ("эмээ нь авна", "чадахгүй"), so when
  * they are sure and the model disagrees, the rules win; when they are not
  * sure, the model decides. No model or a bad answer -> rules alone.
@@ -89,16 +92,21 @@ export const interpretReply = async (text: string, ctx: ReplyContext): Promise<I
     if (!allowedOutcomes[ctx.purpose].includes(parsed.outcome)) throw new Error("outcome not allowed for purpose");
     if (rules.outcome !== "unknown" && rules.outcome !== parsed.outcome) return rules;
 
-    // Keep only the fields that belong to the outcome, and trust the rule
-    // parser's number when the model missed it (small models do).
+    // Keep only the fields that belong to the outcome. A number spelled out in
+    // the reply ("арван таван минут") is parsed exactly by the rules, so it wins
+    // over the model's arithmetic (small models miscount).
     const timed = parsed.outcome === "coming" || parsed.outcome === "someone_else";
     return {
       outcome: parsed.outcome,
-      etaMinutes: timed ? (parsed.etaMinutes ?? rules.etaMinutes) : undefined,
-      pickupPerson: parsed.outcome === "someone_else" ? (parsed.pickupPerson ?? rules.pickupPerson) : undefined,
+      etaMinutes: timed ? (rules.etaMinutes ?? parsed.etaMinutes ?? undefined) : undefined,
+      pickupPerson:
+        parsed.outcome === "someone_else"
+          ? (rules.pickupPerson ?? parsed.pickupPerson?.replace(/\s+нь$/, "") ?? undefined)
+          : undefined,
       reason: parsed.outcome === "absent_reason" ? (parsed.reason ?? rules.reason) : undefined,
       summary: isMongolianSummary(parsed.summary) ? parsed.summary : rules.summary,
-      engine: "gemma",
+      engine: "llm",
+      model: env.LLM_MODEL,
     };
   } catch {
     return rules;
@@ -229,9 +237,9 @@ const PEOPLE = [
 
 const findPerson = (text: string, self: string) => {
   for (const person of PEOPLE) {
-    // "эмээ нь авна", "аав нь 10 минутын дараа очно": the person, then up to four words, then the action.
+    // "эмээ нь авна", "эмээ нь 15 минутын дараа ирж авна": the person, up to six words, then the action.
     const re = new RegExp(
-      `(^| )${person}\\S*( \\S+){0,4} (авна|авах|очно|ирнэ|очих|ирэх|авчихна|авъя|явуулна)`,
+      `(^| )${person}\\S*( \\S+){0,6} (авна|авах|очно|ирнэ|очих|ирэх|авчихна|авъя|явуулна)`,
     );
     if (re.test(text) && !self.toLowerCase().includes(person)) return person;
   }

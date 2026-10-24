@@ -92,7 +92,9 @@ const intentSchema = new Schema(
     pickupPerson: { type: String },
     reason: { type: String },
     summary: { type: String },
-    engine: { type: String, enum: ["gemma", "rules"] },
+    engine: { type: String, enum: ["llm", "rules"] },
+    // LLM_MODEL that produced the result, e.g. "gemma4" or "oyuLLM".
+    model: { type: String },
   },
   { _id: false },
 );

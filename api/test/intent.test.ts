@@ -44,6 +44,13 @@ describe("parseReplyRules — late pickup", () => {
     assert.equal(intent.etaMinutes, 15);
   });
 
+  it("finds the person in a long sentence", () => {
+    const intent = parseReplyRules("Эмээ нь арван таван минутын дараа ирж авна", ctx("late_pickup"));
+    assert.equal(intent.outcome, "someone_else");
+    assert.equal(intent.pickupPerson, "эмээ");
+    assert.equal(intent.etaMinutes, 15);
+  });
+
   it("does not treat the caller's own relation as someone else", () => {
     const intent = parseReplyRules("Ээж нь удахгүй очно", ctx("late_pickup", "ээж"));
     assert.equal(intent.outcome, "coming");

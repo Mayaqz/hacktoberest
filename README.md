@@ -35,7 +35,7 @@ sequenceDiagram
     participant T as Багш (консол / erxes)
     participant S as Subedei API
     participant P as Эцэг эхийн утас
-    participant G as Gemma 4
+    participant G as Gemma 4 / oyuLLM
     T->>S: Ирц: Болд ирсэн
     Note over S: 17:10 — Болдыг аваагүй
     S->>P: 📞 Ээж рүү залгана (Oyu TTS)
@@ -57,8 +57,8 @@ sequenceDiagram
 | API | Node.js 22+, Express 5, Apollo Federation subgraph, Mongoose (MongoDB), zod |
 | Багшийн консол, утасны симулятор | HTML, CSS, JavaScript (build шаардлагагүй), Server-Sent Events |
 | erxes UI | React 18 Module Federation remote (Rspack), `@erxes/ui`, `@erxes/ui-modules`, Tailwind |
-| AI | **Gemma 4**: OpenAI-compatible endpoint (Ollama, эсвэл DigitalOcean GPU Droplet дээрх vLLM/Ollama) |
-| Яриа | **Oyu** TTS/STT (HTTP adapter), нөөц нь browser-ийн Web Speech API |
+| AI | **Gemma 4** (Ollama, эсвэл DigitalOcean GPU Droplet дээрх vLLM/Ollama) эсвэл монгол хэлний **oyuLLM**. Хоёулаа OpenAI-compatible тул зөвхөн `.env`-ээр сольдог |
+| Яриа | **Oyu**: tsuurAI TTS (`/v1/audio/speech`, WAV) ба Anir STT (`/v1/audio/transcriptions`). Түлхүүргүй үед browser-ийн Web Speech API ажиллана |
 | SMS | HTTP gateway adapter, нөөц нь симулятор |
 | erxes холболт | Redis service discovery, gateway subgraph, core-api tRPC (`customers.*`, `internalNotes.add`) |
 
@@ -81,13 +81,23 @@ docker run -d --name subedei-mongo -p 27017:27017 mongo:7
 
 эсвэл `.env` дотор `MONGO_MEMORY=true` гэж тохируулна (анх удаа mongod татна).
 
-**2. Gemma 4** (заавал биш, байхгүй бол дүрмийн задлагч ажиллана):
+**2. Oyu яриа**: https://oyu.so/account/apikeys хуудаснаас түлхүүр аваад `.env` файлд `OYU_API_KEY=...` гэж бичнэ. Ингэснээр сургуулийн дуудлага монгол хоолойгоор ярьж, эцэг эхийн дуут хариуг Anir текст болгоно.
+
+**3. AI model** (заавал биш, байхгүй бол дүрмийн задлагч ажиллана). Аль нэгийг сонгоно:
 
 ```bash
 ollama pull gemma4
 ```
 
-**3. Ажиллуулах:**
+эсвэл `.env` дотор oyuLLM-ийг тохируулна. Энэ нь Oyu-ийн нөгөө түлхүүрээр ажилладаг, юу ч татах шаардлагагүй:
+
+```
+LLM_BASE_URL=https://api.oyu.so/v1
+LLM_MODEL=oyuLLM
+LLM_API_KEY=<oyu түлхүүр>
+```
+
+**4. Ажиллуулах:**
 
 ```bash
 npm run dev
@@ -145,8 +155,8 @@ npm run dev:ui     # http://localhost:3099/remoteEntry.js
 
 | Хувьсагч | Утга |
 |---|---|
-| `LLM_BASE_URL`, `LLM_MODEL` | Gemma 4 endpoint (default `http://localhost:11434/v1`, `gemma4`) |
-| `OYU_TTS_URL`, `OYU_STT_URL`, `OYU_API_KEY` | Oyu яриа. Request/response хэлбэрийг [`api/src/services/speech.ts`](api/src/services/speech.ts)-д нэг газраас өөрчилнө |
+| `LLM_BASE_URL`, `LLM_MODEL`, `LLM_API_KEY` | AI endpoint: Gemma 4 (default `http://localhost:11434/v1`, `gemma4`) эсвэл oyuLLM (`https://api.oyu.so/v1`, `oyuLLM`) |
+| `OYU_API_KEY`, `OYU_VOICE` | Oyu яриа: tsuurAI TTS (`female` / `mbspeech`), Anir STT. [`api/src/services/speech.ts`](api/src/services/speech.ts) |
 | `SMS_HTTP_URL`, `SMS_HTTP_TOKEN` | SMS gateway (`{to, text, from}` JSON). Хариу SMS-ийн webhook: `POST /api/sms/inbound {from, text}` |
 | `RING_TIMEOUT_SEC`, `PICKUP_GRACE_MIN`, `AUTO_PICKUP_CALLS` | Залгалтын дүрэм |
 | `ERXES_ENABLED`, `REDIS_*`, `ERXES_USER_ID` | erxes холболт |
@@ -154,7 +164,7 @@ npm run dev:ui     # http://localhost:3099/remoteEntry.js
 ## Шалгах
 
 ```bash
-npm test          # 32 тест: монгол хариу задлагч, Gemma хамгаалалт, залгалтын урсгал, сурагч/эцэг эхийн бүртгэл (MongoDB хэрэгтэй)
+npm test          # 34 тест: монгол хариу задлагч, Gemma хамгаалалт, залгалтын урсгал, сурагч/эцэг эхийн бүртгэл (MongoDB хэрэгтэй)
 npm run check     # API + erxes UI type-check
 npm run build     # API dist + ui/dist/remoteEntry.js
 ```
@@ -165,8 +175,8 @@ MongoDB хэрэгтэй тестүүд нь `TEST_MONGO_URL` өгвөл тэр 
 
 **Одоогийн байдал (шударгаар):**
 - **Утасны дуудлага** нь одоогоор browser дээрх утасны симулятороор явна. Жинхэнэ утасны сүлжээнд залгах бол SIP/Asterisk эсвэл erxes Calls-ыг `api/src/services/calls.ts`-ийн `ring()` дээр холбоно.
-- **Oyu** API-ийн баримт бичиг бидэнд байгаагүй тул adapter нь түгээмэл HTTP хэлбэрээр бичигдсэн. Oyu-ийн бодит API-тай тааруулж шалгах шаардлагатай. Oyu тохируулаагүй үед browser-ийн яриа танигч (Chrome `mn-MN`) ажиллана.
-- **Gemma 4**-ийн урсгалыг OpenAI-compatible endpoint дээр туршсан (локалд `gemma3:1b`-ээр, `gemma4` model татагдаагүй байсан). Жижиг model алдаа гаргаж болох тул дүрмийн задлагч хамгаалалт болж ажиллана.
+- **Oyu** TTS/STT-ийг жинхэнэ API дээр туршсан: TTS ойролцоогоор 1.7 секунд, STT ойролцоогоор 1 секунд. Синтетик дуун дээр STT "Болд" гэдгийг "бол", "эмээ нь" гэдгийг "энэ нь" гэж сонссон тохиолдол гарсан. Жинхэнэ хүний дуун дээр туршиж шалгах хэрэгтэй.
+- **AI**: урсгалыг `gemma3:1b` (локал) болон `oyuLLM` дээр туршсан. `gemma4` model локалд татагдаагүй байсан. Жижиг model тоо буруу тоолох зэрэг алдаа гаргадаг тул тодорхой тоо, хүний нэрийг дүрмийн задлагч давхар шалгана.
 - **erxes**: plugin build хийгдэж, subgraph ажиллаж байна. Жинхэнэ erxes stack дээр gateway бүртгэл болон Contacts синкийг ментортой хамт шалгах шаардлагатай.
 - Нэг сургууль, нэг ангид зориулсан. Standalone консолд нэвтрэлт байхгүй (зөвхөн дотоод сүлжээнд ажиллуулна). erxes горимд erxes-ийн нэвтрэлтийг ашиглана.
 
@@ -181,8 +191,8 @@ api/src/
   graphql/schema.ts    erxes supergraph-д нийлэх subgraph (Subedei* төрлүүд)
   models.ts            MongoDB: Classroom, Student, Guardian, DayRecord, Call, CallFlow, SmsMessage, Meeting
   services/calls.ts    Залгалтын урсгал: ring → answer → reply → intent → next / SMS
-  services/intent.ts   Gemma 4 + монгол дүрмийн задлагч
-  services/speech.ts   Oyu TTS/STT adapter
+  services/intent.ts   Gemma 4 / oyuLLM + монгол дүрмийн задлагч
+  services/speech.ts   Oyu tsuurAI TTS, Anir STT
   services/sms.ts      SMS gateway adapter, Latin галиг
   services/erxes.ts    erxes core tRPC: Contacts, timeline тэмдэглэл
   services/scheduler.ts Автомат залгалт, timeout, хурлын сануулга

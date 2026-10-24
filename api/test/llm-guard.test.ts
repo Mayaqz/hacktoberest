@@ -32,8 +32,16 @@ describe("interpretReply with a model", () => {
     const { interpretReply } = await load();
     reply = JSON.stringify({ outcome: "coming", etaMinutes: 15, pickupPerson: null, reason: null, summary: "Ээж нь 15 минутын дараа ирнэ" });
     const intent = await interpretReply("Ажлаасаа гараад шууд тийшээ", ctx);
-    assert.equal(intent.engine, "gemma");
+    assert.equal(intent.engine, "llm");
     assert.equal(intent.outcome, "coming");
+    assert.equal(intent.etaMinutes, 15);
+  });
+
+  it("keeps a spelled-out number over the model's arithmetic", async () => {
+    const { interpretReply } = await load();
+    reply = JSON.stringify({ outcome: "coming", etaMinutes: 60, pickupPerson: null, reason: null, summary: "Ээж 15 минутын дараа ирнэ" });
+    const intent = await interpretReply("арван таван минутын дараа ирнэ", ctx);
+    assert.equal(intent.engine, "llm");
     assert.equal(intent.etaMinutes, 15);
   });
 
@@ -50,7 +58,7 @@ describe("interpretReply with a model", () => {
     const { interpretReply } = await load();
     reply = `Sure! {"outcome": "coming", "etaMinutes": null, "pickupPerson": "Ээж", "reason": "Buld is coming.", "summary": "One short Mongolian sentence for the teacher"}`;
     const intent = await interpretReply("20 минутын дараа очно", ctx);
-    assert.equal(intent.engine, "gemma");
+    assert.equal(intent.engine, "llm");
     assert.equal(intent.etaMinutes, 20);
     assert.equal(intent.pickupPerson, undefined);
     assert.equal(intent.reason, undefined);

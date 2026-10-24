@@ -1,4 +1,4 @@
-import { CALL_LABELS, PURPOSE_LABELS, api, formatDateTime, html, listen, raw, toast } from "./common.js";
+import { CALL_LABELS, PURPOSE_LABELS, api, formatDateTime, html, listen, modelLabel, raw, toast } from "./common.js";
 
 // Guardian-side phone simulator: receives calls and SMS over SSE, plays the
 // school's spoken message (Oyu TTS audio, or the browser's voice), records the
@@ -78,7 +78,7 @@ const speak = (text, audioUrl) =>
     }
     const voice = mongolianVoice();
     if (!voice || !("speechSynthesis" in window)) {
-      $("#voice-note").textContent = "Монгол дуу хоолой суугаагүй тул текстээр харуулж байна (OYU_TTS_URL тохируулна уу).";
+      $("#voice-note").textContent = "Монгол дуу хоолой суугаагүй тул текстээр харуулж байна (OYU_API_KEY тохируулна уу).";
       resolve();
       return;
     }
@@ -216,7 +216,7 @@ const sendReply = async ({ text, audio }) => {
       ? await api(`/calls/${currentCall.callId}/reply`, { method: "POST", body: audio, headers: { "Content-Type": audio.type || "audio/webm" } })
       : await api(`/calls/${currentCall.callId}/reply`, { method: "POST", body: { text } });
     $("#caption").textContent = `Та: “${call.transcript}”\n\n🏫 ${call.confirmation}`;
-    $("#call-state").textContent = call.intent?.engine === "gemma" ? "Gemma 4 ойлголоо ✓" : "Хүлээн авлаа ✓";
+    $("#call-state").textContent = call.intent?.engine === "llm" ? `${modelLabel(call.intent.model)} ойлголоо ✓` : "Хүлээн авлаа ✓";
     await speak(call.confirmation, call.confirmationAudioUrl);
     endCallScreen("Дуудлага дууслаа");
     loadInbox();
@@ -245,6 +245,36 @@ $("#quick").addEventListener("click", (e) => {
 const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 let recorder = null;
 let recognition = null;
+
+/** Oyu Anir accepts WAV/MP3/OGG, but browsers record WebM: re-encode as 16 kHz mono WAV. */
+const toWav16k = async (blob) => {
+  const decoded = await new AudioContext().decodeAudioData(await blob.arrayBuffer());
+  const rate = 16_000;
+  const offline = new OfflineAudioContext(1, Math.ceil(decoded.duration * rate), rate);
+  const source = offline.createBufferSource();
+  source.buffer = decoded;
+  source.connect(offline.destination);
+  source.start();
+  const samples = (await offline.startRendering()).getChannelData(0);
+
+  const view = new DataView(new ArrayBuffer(44 + samples.length * 2));
+  const text = (offset, value) => [...value].forEach((c, i) => view.setUint8(offset + i, c.charCodeAt(0)));
+  text(0, "RIFF");
+  view.setUint32(4, 36 + samples.length * 2, true);
+  text(8, "WAVE");
+  text(12, "fmt ");
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true); // PCM
+  view.setUint16(22, 1, true); // mono
+  view.setUint32(24, rate, true);
+  view.setUint32(28, rate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  text(36, "data");
+  view.setUint32(40, samples.length * 2, true);
+  samples.forEach((s, i) => view.setInt16(44 + i * 2, Math.max(-1, Math.min(1, s)) * 0x7fff, true));
+  return new Blob([view], { type: "audio/wav" });
+};
 
 const micMode = () => {
   if (status?.speech?.stt === "oyu" && navigator.mediaDevices?.getUserMedia && window.MediaRecorder) return "oyu";
@@ -284,11 +314,16 @@ $("#mic").addEventListener("click", async () => {
       const chunks = [];
       recorder = new MediaRecorder(stream);
       recorder.ondataavailable = (e) => chunks.push(e.data);
-      recorder.onstop = () => {
+      recorder.onstop = async () => {
         stream.getTracks().forEach((t) => t.stop());
         $("#mic").classList.remove("recording");
         const blob = new Blob(chunks, { type: recorder.mimeType || "audio/webm" });
-        if (blob.size) sendReply({ audio: blob });
+        if (!blob.size) return;
+        try {
+          sendReply({ audio: await toWav16k(blob) });
+        } catch (error) {
+          toast(`Бичлэгийг хөрвүүлж чадсангүй: ${error.message}`, "warn");
+        }
       };
       recorder.start();
       $("#mic").classList.add("recording");

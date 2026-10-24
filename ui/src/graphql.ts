@@ -99,6 +99,7 @@ export const CALLS_QUERY = gql(`
         outcome
         summary
         engine
+        model
       }
     }
   }

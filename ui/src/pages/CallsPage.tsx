@@ -5,7 +5,7 @@ import { PageHeader } from "ui-modules";
 import { Link } from "react-router";
 import manifest from "../../../erxes.json" with { type: "json" };
 import { CALLS_QUERY } from "../graphql";
-import { CALL_LABELS, PURPOSE_LABELS, callTone, formatTime } from "../labels";
+import { CALL_LABELS, PURPOSE_LABELS, callTone, formatTime, modelLabel } from "../labels";
 
 const { path } = manifest.ui;
 
@@ -43,7 +43,7 @@ const CallList = () => {
           {call.transcript && <p className="subedei:mt-2">🗣️ “{call.transcript}”</p>}
           {call.intent?.summary && (
             <p className="subedei:mt-1 subedei:text-muted-foreground">
-              {call.intent.engine === "gemma" ? "Gemma 4" : "Дүрэм"}: {call.intent.summary}
+              {call.intent.engine === "llm" ? modelLabel(call.intent.model) : "Дүрэм"}: {call.intent.summary}
             </p>
           )}
         </Card>

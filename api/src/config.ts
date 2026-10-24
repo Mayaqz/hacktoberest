@@ -68,13 +68,14 @@ const envSchema = z.object({
   LLM_API_KEY: optional,
   LLM_TIMEOUT_MS: z.coerce.number().int().positive().default(20000),
 
-  // Oyu speech services. Unset URLs fall back to the browser (Web Speech API).
-  OYU_TTS_URL: optional,
-  OYU_STT_URL: optional,
+  // Oyu speech (https://dev.oyu.so): tsuurAI TTS and Anir STT. Without a key
+  // the phone page falls back to the browser's Web Speech API.
   OYU_API_KEY: optional,
-  OYU_AUTH_HEADER: z.string().default("Authorization"),
-  OYU_AUTH_PREFIX: z.string().default("Bearer "),
-  OYU_VOICE: optional,
+  OYU_BASE_URL: z.string().default("https://api.oyu.so/v1"),
+  // "female" or "mbspeech" (male).
+  OYU_VOICE: z.string().default("female"),
+  // Anir model, e.g. "v4"; unset = Oyu's default.
+  OYU_STT_MODEL: optional,
 
   // SMS gateway. Unset = simulator (messages appear on the phone page).
   SMS_HTTP_URL: optional,

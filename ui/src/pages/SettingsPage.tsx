@@ -34,7 +34,7 @@ const Status = () => {
   return (
     <dl className="subedei:grid subedei:grid-cols-[10rem_1fr] subedei:gap-y-2 subedei:text-sm">
       <Row label="Сургууль">{s.school}</Row>
-      <Row label="Gemma">
+      <Row label="AI model">
         <Badge variant={s.llmReachable ? "success" : "warning"}>
           {s.llmModel} · {s.llmReachable ? "ажиллаж байна" : "холбогдоогүй (дүрмийн задлагч)"}
         </Badge>

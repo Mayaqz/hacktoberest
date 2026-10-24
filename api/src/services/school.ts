@@ -142,7 +142,7 @@ export const resetPickup = async (studentId: string, date = today()) => {
 export const studentsOf = async (ids: (string | Types.ObjectId)[]) =>
   Students.find({ _id: { $in: ids } }).lean<StudentDoc[]>();
 
-/** Gemma drafts a short, polite SMS from the teacher's note. */
+/** The LLM (Gemma 4 / oyuLLM) drafts a short, polite SMS from the teacher's note. */
 export const draftSms = async (note: string, teacherName = "") => {
   const fallback = `[${env.SCHOOL_NAME}] Эрхэм эцэг эх, ${note.trim().replace(/\.$/, "")}.${teacherName ? ` Багш ${teacherName}` : ""}`;
   try {
@@ -159,7 +159,11 @@ export const draftSms = async (note: string, teacherName = "") => {
       ],
       { maxTokens: 220 },
     );
-    return { text: text.replace(/^["']|["']$/g, "").trim().slice(0, 320), engine: "gemma" as const };
+    return {
+      text: text.replace(/^["']|["']$/g, "").trim().slice(0, 320),
+      engine: "llm" as const,
+      model: env.LLM_MODEL,
+    };
   } catch {
     return { text: fallback, engine: "template" as const };
   }
@@ -190,7 +194,7 @@ export const daySummary = async (date = today()) => {
       ],
       { maxTokens: 300 },
     );
-    return { text, engine: "gemma" as const };
+    return { text, engine: "llm" as const, model: env.LLM_MODEL };
   } catch {
     return { text: fallback, engine: "template" as const };
   }

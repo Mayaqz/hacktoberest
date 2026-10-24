@@ -10,6 +10,7 @@ import {
   formatTime,
   html,
   listen,
+  modelLabel,
   raw,
   toast,
 } from "./common.js";
@@ -82,7 +83,7 @@ const renderChips = () => {
   $("#school-line").textContent = `${s.school} · Багшийн автомат туслах`;
   const llmOn = s.llm.reachable && s.llm.modelFound;
   const chips = [
-    [`Gemma: ${s.llm.model}`, llmOn ? "true" : s.llm.reachable ? "warn" : "false", llmOn ? "Gemma ажиллаж байна" : "Gemma холбогдоогүй — дүрмийн задлагч ажиллана"],
+    [`AI: ${modelLabel(s.llm.model)}`, llmOn ? "true" : s.llm.reachable ? "warn" : "false", llmOn ? `${s.llm.model} ажиллаж байна` : "AI холбогдоогүй — дүрмийн задлагч ажиллана"],
     [`TTS: ${s.speech.tts === "oyu" ? "Oyu" : "browser"}`, s.speech.tts === "oyu" ? "true" : "warn", "Монгол яриа үүсгэгч"],
     [`STT: ${s.speech.stt === "oyu" ? "Oyu" : "browser"}`, s.speech.stt === "oyu" ? "true" : "warn", "Яриа танигч"],
     [`SMS: ${s.sms.provider === "http" ? "gateway" : "simulator"}`, s.sms.provider === "http" ? "true" : "warn", "SMS илгээгч"],
@@ -190,7 +191,7 @@ const renderCalls = () => {
             ${raw(call.transcript ? html`<div class="quote">🗣️ “${call.transcript}”</div>` : "")}
             ${raw(
               intent
-                ? html`<div class="item-head" style="margin-top: 6px"><span class="badge ${intent.engine === "gemma" ? "ai" : ""}">${intent.engine === "gemma" ? "Gemma 4" : "Дүрэм"}</span><span>${intent.summary ?? ""}</span></div>`
+                ? html`<div class="item-head" style="margin-top: 6px"><span class="badge ${intent.engine === "llm" ? "ai" : ""}">${intent.engine === "llm" ? modelLabel(intent.model) : "Дүрэм"}</span><span>${intent.summary ?? ""}</span></div>`
                 : "",
             )}
             ${raw(call.recordingUrl ? html`<audio controls preload="none" src="${call.recordingUrl}"></audio>` : "")}
@@ -357,7 +358,7 @@ const renderSettings = () => {
     $("#erxes-hint").textContent = s.erxes.enabled
       ? `Gateway-д бүртгэгдсэн. Эцэг эх erxes Contacts-д харилцагчаар үүснэ${s.erxes.notes ? ", дуудлага/SMS бүр timeline-д тэмдэглэл болно" : " (тэмдэглэл бичихэд ERXES_USER_ID хэрэгтэй)"}.`
       : "Standalone горим. ERXES_ENABLED=true болгож erxes-ийн Redis-тэй холбоно уу.";
-    $("#system-info").innerHTML = html`Gemma: ${s.llm.model} @ ${s.llm.reachable ? "холбогдсон" : "холбогдоогүй"}${s.llm.reachable && !s.llm.modelFound ? " (model татаагүй)" : ""}<br />
+    $("#system-info").innerHTML = html`AI: ${s.llm.model} @ ${s.llm.reachable ? "холбогдсон" : "холбогдоогүй"}${s.llm.reachable && !s.llm.modelFound ? " (model татаагүй)" : ""}<br />
       TTS: ${s.speech.tts} · STT: ${s.speech.stt} · SMS: ${s.sms.provider}${s.sms.latin ? " (latin)" : ""}<br />
       Цагийн бүс: ${s.timezone} · v${s.version}`;
   }
@@ -638,8 +639,8 @@ document.addEventListener("click", async (event) => {
         const r = await api("/summary");
         $("#summary-card").classList.remove("hidden");
         $("#summary-text").textContent = r.text;
-        $("#summary-engine").textContent = r.engine === "gemma" ? "Gemma 4" : "Загвар";
-        $("#summary-engine").className = `badge ${r.engine === "gemma" ? "ai" : ""}`;
+        $("#summary-engine").textContent = r.engine === "llm" ? modelLabel(r.model) : "Загвар";
+        $("#summary-engine").className = `badge ${r.engine === "llm" ? "ai" : ""}`;
       });
     case "draft-sms":
       return withBusy(target, async () => {
@@ -648,7 +649,7 @@ document.addEventListener("click", async (event) => {
         const r = await api("/sms/draft", { method: "POST", body: { note } });
         $("#sms-text").value = r.text;
         updateSmsCounter();
-        toast(r.engine === "gemma" ? "Gemma 4 найрууллаа" : "Gemma холбогдоогүй тул загвараар бэлдлээ", r.engine === "gemma" ? "info" : "warn");
+        toast(r.engine === "llm" ? `${modelLabel(r.model)} найрууллаа` : "AI холбогдоогүй тул загвараар бэлдлээ", r.engine === "llm" ? "info" : "warn");
       });
     case "send-sms":
       return withBusy(target, async () => {
