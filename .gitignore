@@ -1,0 +1,7 @@
+node_modules
+dist
+api/generated
+ui/src/gql
+.env
+# Runtime files: TTS audio cache and recorded guardian replies.
+data

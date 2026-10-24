@@ -1,0 +1,14 @@
+{
+  "ignorePatterns": ["ui/src/gql", "api/generated"],
+  "overrides": [
+    {
+      "files": ["ui/**/*.ts", "ui/**/*.tsx"],
+      "rules": {
+        "no-restricted-imports": ["error", { "paths": [
+          { "name": "graphql-tag", "message": "Use `import { gql } from \"~/gql\"` so codegen picks the document up." },
+          { "name": "@apollo/client", "importNames": ["gql"], "message": "Use `import { gql } from \"~/gql\"` so codegen picks the document up." }
+        ] }]
+      }
+    }
+  ]
+}

@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="mn">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Эцэг эхийн утас</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%2315803d'/><text x='16' y='22' font-size='16' text-anchor='middle' fill='white' font-family='sans-serif'>📱</text></svg>" />
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 100vh;
+        padding: 16px;
+      }
+      .picker {
+        width: 100%;
+        max-width: 380px;
+        margin-bottom: 12px;
+      }
+      .phone {
+        position: relative;
+        width: 100%;
+        max-width: 380px;
+        min-height: 640px;
+        border-radius: 36px;
+        border: 10px solid #111;
+        background: var(--surface);
+        overflow: hidden;
+        box-shadow: 0 20px 50px rgb(0 0 0 / 25%);
+        display: flex;
+        flex-direction: column;
+      }
+      .statusbar {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 18px 4px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .screen {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 12px 16px 20px;
+        gap: 10px;
+        overflow: auto;
+      }
+      .call-screen {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
+        padding: 56px 20px 36px;
+        text-align: center;
+        color: #fff;
+        background: linear-gradient(170deg, #1e3a8a, #0f172a 70%);
+        z-index: 2;
+        overflow-y: auto;
+      }
+      .call-screen.in-call {
+        justify-content: flex-start;
+        gap: 14px;
+        padding-top: 24px;
+      }
+      .call-screen.in-call .avatar {
+        width: 56px;
+        height: 56px;
+        font-size: 26px;
+        margin-bottom: 6px;
+      }
+      .avatar {
+        display: grid;
+        place-items: center;
+        width: 96px;
+        height: 96px;
+        margin: 0 auto 14px;
+        border-radius: 50%;
+        background: rgb(255 255 255 / 15%);
+        font-size: 44px;
+      }
+      .ringing .avatar {
+        animation: ring 1s ease-in-out infinite;
+      }
+      @keyframes ring {
+        0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgb(255 255 255 / 40%); }
+        50% { transform: scale(1.05); box-shadow: 0 0 0 18px rgb(255 255 255 / 0%); }
+      }
+      .call-buttons {
+        display: flex;
+        gap: 48px;
+        justify-content: center;
+      }
+      .round {
+        width: 68px;
+        height: 68px;
+        border-radius: 50%;
+        border: 0;
+        font-size: 28px;
+        cursor: pointer;
+        color: #fff;
+      }
+      .round.accept { background: #16a34a; }
+      .round.reject { background: #dc2626; }
+      .round.mic { background: #2563eb; }
+      .round.mic.recording { background: #dc2626; animation: pulse 1s infinite; }
+      .caption {
+        max-height: 200px;
+        overflow: auto;
+        padding: 12px;
+        border-radius: 12px;
+        background: rgb(255 255 255 / 12%);
+        font-size: 15px;
+        text-align: left;
+      }
+      .quick {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        justify-content: center;
+      }
+      .quick button {
+        padding: 6px 10px;
+        border-radius: 999px;
+        border: 1px solid rgb(255 255 255 / 35%);
+        background: rgb(255 255 255 / 10%);
+        color: #fff;
+        cursor: pointer;
+        font-size: 13px;
+      }
+      .reply-row {
+        display: flex;
+        gap: 6px;
+        width: 100%;
+      }
+      .reply-row input {
+        background: rgb(255 255 255 / 92%);
+        color: #111;
+      }
+      .bubble {
+        align-self: flex-start;
+        max-width: 92%;
+        padding: 10px 12px;
+        border-radius: 14px 14px 14px 4px;
+        background: var(--surface-2);
+        font-size: 14px;
+      }
+      .bubble.out {
+        align-self: flex-end;
+        border-radius: 14px 14px 4px 14px;
+        background: var(--primary);
+        color: var(--primary-ink);
+      }
+      .bubble small {
+        display: block;
+        margin-top: 4px;
+        opacity: 0.7;
+        font-size: 11px;
+      }
+      .unlock {
+        position: absolute;
+        inset: 0;
+        z-index: 3;
+        display: grid;
+        place-items: center;
+        background: rgb(0 0 0 / 55%);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="picker">
+      <label for="guardian">Энэ утас хэнийх вэ?</label>
+      <select id="guardian"></select>
+    </div>
+
+    <div class="phone">
+      <div class="statusbar"><span id="clock"></span><span id="owner"></span><span>📶 🔋</span></div>
+      <div class="screen" id="home">
+        <h3 style="margin: 0">💬 Мессеж</h3>
+        <div id="thread" class="list"></div>
+        <form class="reply-row" id="sms-form">
+          <input id="sms-input" placeholder="SMS хариу бичих (1 = ирнэ, 2 = ирэхгүй)" autocomplete="off" />
+          <button class="btn primary" type="submit">➤</button>
+        </form>
+        <h3 style="margin: 8px 0 0">📞 Дуудлага</h3>
+        <div id="call-log" class="list"></div>
+      </div>
+
+      <div class="call-screen hidden" id="call-screen">
+        <div>
+          <div class="avatar">🏫</div>
+          <div style="font-size: 22px; font-weight: 700" id="caller">Сургууль</div>
+          <div id="call-state" style="opacity: 0.8">Дуудлага ирж байна…</div>
+        </div>
+
+        <div id="in-call" class="hidden" style="width: 100%; display: flex; flex-direction: column; gap: 12px; align-items: center">
+          <div class="caption" id="caption"></div>
+          <div id="voice-note" class="sub" style="color: #cbd5e1"></div>
+          <button class="round mic" id="mic" title="Дарж ярина уу">🎤</button>
+          <div class="sub" style="color: #cbd5e1" id="mic-hint">Микрофон дээр дараад хариугаа хэлнэ үү</div>
+          <div class="quick" id="quick"></div>
+          <form class="reply-row" id="reply-form">
+            <input id="reply-input" placeholder="эсвэл бичих…" autocomplete="off" />
+            <button class="btn primary" type="submit">➤</button>
+          </form>
+        </div>
+
+        <div class="call-buttons" id="ring-buttons">
+          <button class="round reject" id="decline" title="Татгалзах">✆</button>
+          <button class="round accept" id="accept" title="Хариулах">✆</button>
+        </div>
+        <button class="round reject hidden" id="hangup" title="Дуусгах">✆</button>
+      </div>
+
+      <div class="unlock" id="unlock">
+        <button class="btn primary">🔔 Утсыг идэвхжүүлэх (дуу, чичиргээ)</button>
+      </div>
+    </div>
+
+    <script type="module" src="phone.js"></script>
+  </body>
+</html>

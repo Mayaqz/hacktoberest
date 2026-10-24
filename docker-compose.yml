@@ -1,0 +1,31 @@
+# Standalone demo: MongoDB + the Subedei API/console.
+#   docker compose up --build      ->  http://localhost:3399
+# Gemma runs on the host (Ollama) and is reached through host.docker.internal.
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+
+  subedei:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      - mongo
+    ports:
+      - "3399:80"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      MONGO_URL: mongodb://mongo:27017/subedei
+      LLM_BASE_URL: ${LLM_BASE_URL:-http://host.docker.internal:11434/v1}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - subedei-data:/app/data
+
+volumes:
+  mongo-data:
+  subedei-data:

@@ -1,0 +1,47 @@
+{
+  "name": "subedei_ui",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "rspack serve",
+    "build": "rspack build",
+    "check": "tsc --noEmit",
+    "codegen": "graphql-codegen --config codegen.ts"
+  },
+  "dependencies": {
+    "@tabler/icons-react": "^3.48.0"
+  },
+  "devDependencies": {
+    "@apollo/client": "^3.14.1",
+    "@graphql-codegen/cli": "^7.4.3",
+    "@graphql-codegen/client-preset": "^6.2.0",
+    "@graphql-typed-document-node/core": "^3.2.0",
+    "@module-federation/enhanced": "^2.9.2",
+    "@rspack/cli": "^2.2.8",
+    "@rspack/core": "^2.2.8",
+    "@rspack/dev-server": "^2.2.1",
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "^22.20.4",
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "css-loader": "^7.1.5",
+    "graphql": "^16.14.2",
+    "i18next": "23.16.8",
+    "jotai": "^2.12.0",
+    "postcss": "^8.5.28",
+    "postcss-loader": "^8.2.1",
+    "style-loader": "^4.0.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-is": "18.3.1",
+    "react-i18next": "^15.1.1",
+    "react-router": "^7.18.4",
+    "react-router-dom": "^7.18.4",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5.9.3",
+    "webpack": "5.112.0",
+    "erxes-ui": "npm:@erxes/ui@3.3.4",
+    "ui-modules": "npm:@erxes/ui-modules@3.3.4"
+  }
+}

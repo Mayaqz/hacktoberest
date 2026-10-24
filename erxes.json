@@ -1,0 +1,20 @@
+{
+  "name": "subedei",
+  "title": "Subedei",
+  "description": "Багшийн автомат туслах: ирц, хоцорсон эцэг эх рүү залгах, SMS, хурлын сануулга",
+  "version": "0.1.0",
+  "api": {
+    "framework": "express",
+    "runtime": "node",
+    "port": 3399,
+    "graphql": "/graphql",
+    "health": "/health"
+  },
+  "ui": {
+    "framework": "react",
+    "port": 3099,
+    "name": "subedei",
+    "remote": "subedei_ui",
+    "path": "subedei"
+  }
+}

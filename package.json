@@ -1,0 +1,32 @@
+{
+  "name": "subedei",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "workspaces": [
+    "api",
+    "ui"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w subedei_api",
+    "demo": "npm run demo -w subedei_api",
+    "seed": "npm run seed -w subedei_api",
+    "test": "npm run test -w subedei_api",
+    "dev:api": "npm run dev -w subedei_api",
+    "dev:ui": "npm run codegen && npm run dev -w subedei_ui",
+    "codegen": "npm run schema:print -w subedei_api && npm run codegen -w subedei_ui",
+    "build": "npm run codegen && npm run build -w subedei_api && npm run build -w subedei_ui",
+    "check": "npm run codegen && npm run check -w subedei_api && npm run check -w subedei_ui",
+    "lint": "oxlint",
+    "fmt": "oxfmt"
+  },
+  "devDependencies": {
+    "oxfmt": "^0.71.0",
+    "oxlint": "^1.86.0"
+  },
+  "overrides": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  }
+}

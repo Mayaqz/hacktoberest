@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="mn">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Сүбэдэй — Багшийн туслах</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%234f46e5'/><text x='16' y='22' font-size='16' text-anchor='middle' fill='white' font-family='sans-serif'>С</text></svg>" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">С</span>
+        <span>Сүбэдэй <small id="school-line">Багшийн автомат туслах</small></span>
+      </div>
+      <div class="chips" id="chips" aria-label="Холболтын төлөв"></div>
+      <a class="btn small" href="phone.html" target="_blank" rel="noopener">📱 Эцэг эхийн утас</a>
+    </header>
+
+    <nav class="tabs" role="tablist">
+      <button role="tab" data-tab="today" aria-selected="true">Өнөөдөр</button>
+      <button role="tab" data-tab="calls">Дуудлага</button>
+      <button role="tab" data-tab="sms">SMS</button>
+      <button role="tab" data-tab="meetings">Хурал</button>
+      <button role="tab" data-tab="roster">Сурагчид</button>
+      <button role="tab" data-tab="settings">Тохиргоо</button>
+    </nav>
+
+    <main>
+      <section data-panel="today">
+        <div class="section-head">
+          <h2 id="today-title">Өнөөдөр</h2>
+          <div class="actions">
+            <button class="btn" data-action="all-present">✅ Бүртгээгүйг ирсэн болгох</button>
+            <button class="btn" data-action="notify-absent">📞 Тасалсан хүүхдийн эцэг эхэд залгах</button>
+            <button class="btn primary" data-action="check-pickup">⏰ Хоцорсон авалтыг одоо шалгах</button>
+            <button class="btn" data-action="summary">✨ Өдрийн тайлан</button>
+          </div>
+        </div>
+        <div class="kpis" id="kpis"></div>
+        <div class="card hidden" id="summary-card">
+          <h3>Өдрийн тайлан <span class="badge" id="summary-engine"></span></h3>
+          <div class="summary-box" id="summary-text"></div>
+        </div>
+        <div class="card table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Сурагч</th>
+                <th>Ирц</th>
+                <th>Хүүхэд авалт</th>
+                <th class="hide-sm">Сүүлийн дуудлага</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="students"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section data-panel="calls" class="hidden">
+        <div class="section-head">
+          <h2>Дуудлагын түүх</h2>
+          <span class="sub">Эцэг эхийн яриаг Oyu STT текст болгож, Gemma 4 ойлгоно</span>
+        </div>
+        <div class="list" id="calls"></div>
+      </section>
+
+      <section data-panel="sms" class="hidden">
+        <div class="grid-2">
+          <div class="card">
+            <h3>Олон эцэг эх рүү SMS</h3>
+            <div class="actions" style="margin-bottom: 8px">
+              <button class="btn small" data-select="all">Бүгд</button>
+              <button class="btn small" data-select="primary">Үндсэн эцэг эх</button>
+              <button class="btn small" data-select="waiting">Хүүхдээ аваагүй</button>
+              <button class="btn small" data-select="absent">Тасалсан хүүхдийн</button>
+              <button class="btn small" data-select="none">Цэвэрлэх</button>
+            </div>
+            <div class="recipients" id="recipients"></div>
+          </div>
+          <div class="card">
+            <h3>Мессеж</h3>
+            <label for="sms-text">Товч тэмдэглэл бичээд AI-аар найруулж болно</label>
+            <textarea id="sms-text" placeholder="Жишээ: Маргааш биеийн тамирын хичээлтэй, спорт хувцастай ирнэ үү."></textarea>
+            <div class="section-head" style="margin: 8px 0 0">
+              <span class="sub"><span id="sms-count">0</span> тэмдэгт · <span id="sms-selected">0</span> хүлээн авагч</span>
+              <div class="actions">
+                <button class="btn" data-action="draft-sms">✨ AI-аар найруулах</button>
+                <button class="btn primary" data-action="send-sms">Илгээх</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>SMS-ийн түүх</h3>
+          <div class="list" id="sms-history"></div>
+        </div>
+      </section>
+
+      <section data-panel="meetings" class="hidden">
+        <div class="grid-2">
+          <form class="card" id="meeting-form">
+            <h3>Шинэ хурал / арга хэмжээ</h3>
+            <div class="form-row">
+              <div>
+                <label for="m-title">Гарчиг</label>
+                <input id="m-title" required value="Эцэг эхийн хурал" />
+              </div>
+              <div>
+                <label for="m-start">Огноо, цаг</label>
+                <input id="m-start" type="datetime-local" required />
+              </div>
+            </div>
+            <div class="form-row">
+              <div>
+                <label for="m-location">Байршил</label>
+                <input id="m-location" placeholder="204 тоот анги" />
+              </div>
+              <div>
+                <label>Сануулах (SMS)</label>
+                <div class="actions">
+                  <label><input type="checkbox" name="m-remind" value="1440" checked style="width: auto" /> 1 өдрийн өмнө</label>
+                  <label><input type="checkbox" name="m-remind" value="120" checked style="width: auto" /> 2 цагийн өмнө</label>
+                  <label><input type="checkbox" name="m-remind" value="30" style="width: auto" /> 30 мин</label>
+                </div>
+              </div>
+            </div>
+            <label for="m-note">Тайлбар</label>
+            <input id="m-note" placeholder="Улирлын дүн, ахиц" />
+            <p class="sub">Хүлээн авагч: анги бүх сурагчийн үндсэн эцэг эх. Эцэг эх "1" (ирнэ) эсвэл "2" (ирэхгүй) гэж хариулна.</p>
+            <button class="btn primary" type="submit">Хурал үүсгэх</button>
+          </form>
+          <div>
+            <div class="list" id="meetings"></div>
+          </div>
+        </div>
+      </section>
+
+      <section data-panel="roster" class="hidden">
+        <div class="section-head">
+          <h2>Сурагчид ба эцэг эх</h2>
+          <div class="actions">
+            <button class="btn danger" data-action="roster-clear">🧹 Demo-г устгаад өөрсдийн ангиа эхлүүлэх</button>
+          </div>
+        </div>
+        <div class="grid-2">
+          <form class="card" id="student-form">
+            <h3>Сурагч нэмэх</h3>
+            <div class="form-row">
+              <div><label for="s-first">Нэр</label><input id="s-first" required /></div>
+              <div><label for="s-last">Овог</label><input id="s-last" placeholder="Б." /></div>
+            </div>
+            <p class="sub">Асран хамгаалагчид энэ дарааллаар залгагдана. Ах дүү хүүхдийн эцэг эхийг ижил утасны дугаараар оруулахад нэг хүн гэж танина.</p>
+            <div id="s-guardians"></div>
+            <div class="actions">
+              <button class="btn small" type="button" data-action="add-guardian-row">+ Асран хамгаалагч</button>
+              <button class="btn primary" type="submit">Нэмэх</button>
+            </div>
+          </form>
+
+          <form class="card" id="import-form">
+            <h3>Excel / Google Sheets-ээс хуулж оруулах</h3>
+            <p class="sub">Мөр бүрт: <b>Сурагчийн нэр · Овог · Хэн · Асран хамгаалагчийн нэр · Утас</b>. Excel-ээс 5 баганаа сонгоод хуулж (Ctrl+C) энд буулгана (Ctrl+V). Нэг сурагчийн хэд хэдэн эцэг эхийг тусдаа мөрөөр бичнэ.</p>
+            <textarea id="import-text" placeholder="Болд	Г.	ээж	Г. Сарантуяа	99001101&#10;Болд	Г.	аав	Б. Ганбаатар	99001102&#10;Сарнай, Э., ээж, Э. Энхтуяа, 99001201"></textarea>
+            <div class="actions" style="margin-top: 8px">
+              <button class="btn primary" type="submit">Оруулах</button>
+            </div>
+            <pre class="sub" id="import-result" style="white-space: pre-wrap"></pre>
+          </form>
+        </div>
+        <div class="list" id="roster"></div>
+      </section>
+
+      <section data-panel="settings" class="hidden">
+        <div class="grid-2">
+          <form class="card" id="class-form">
+            <h3>Анги</h3>
+            <div class="form-row">
+              <div><label for="c-name">Анги</label><input id="c-name" /></div>
+              <div><label for="c-teacher">Багш</label><input id="c-teacher" /></div>
+              <div><label for="c-phone">Багшийн утас</label><input id="c-phone" /></div>
+            </div>
+            <div class="form-row">
+              <div><label for="c-start">Хичээл эхлэх</label><input id="c-start" type="time" /></div>
+              <div><label for="c-pickup">Хичээл тарах (авах цаг)</label><input id="c-pickup" type="time" /></div>
+            </div>
+            <p class="sub" id="pickup-hint"></p>
+            <button class="btn primary" type="submit">Хадгалах</button>
+          </form>
+
+          <div class="card">
+            <h3>erxes холболт</h3>
+            <p class="sub" id="erxes-hint"></p>
+            <div class="actions">
+              <button class="btn" data-action="erxes-sync">🔄 Эцэг эхийг erxes Contacts руу синк хийх</button>
+            </div>
+            <pre class="sub" id="erxes-result" style="white-space: pre-wrap"></pre>
+          </div>
+
+          <div class="card">
+            <h3>Систем</h3>
+            <div id="system-info" class="sub"></div>
+            <div class="actions" style="margin-top: 10px">
+              <button class="btn danger" data-action="demo-reset">Demo ангийг дахин үүсгэх</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
