@@ -3,5 +3,7 @@ dist
 api/generated
 ui/src/gql
 .env
+*.env
+*.env.*
 # Runtime files: TTS audio cache and recorded guardian replies.
 data
