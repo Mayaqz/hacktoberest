@@ -50,7 +50,7 @@ app.use("/api", createRestRouter());
 app.use("/media", express.static(DATA_DIR, { fallthrough: false }));
 app.use(express.static(WEB_DIR));
 
-await new Promise<void>((resolve) => httpServer.listen(env.PORT, resolve));
+await new Promise<void>((resolve) => httpServer.listen(env.PORT, "0.0.0.0", resolve));
 console.log(`${manifest.name} console:   http://localhost:${env.PORT}/`);
 console.log(`${manifest.name} phone:     http://localhost:${env.PORT}/phone.html`);
 console.log(`${manifest.name} GraphQL:   http://localhost:${env.PORT}${manifest.api.graphql}`);
