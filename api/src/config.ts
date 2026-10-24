@@ -37,7 +37,7 @@ const envSchema = z.object({
   REDIS_HOST: z.string().default("localhost"),
   REDIS_PORT: z.coerce.number().int().default(6379),
   REDIS_PASSWORD: optional,
-  MONGO_URL: z.string().default("mongodb://127.0.0.1:27017/subedei"),
+  MONGO_URL: z.string().default(process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/subedei"),
   // Start an in-memory MongoDB instead of MONGO_URL (demo without installing Mongo).
   MONGO_MEMORY: flag(false),
   UI_ENTRY_URL: optional,

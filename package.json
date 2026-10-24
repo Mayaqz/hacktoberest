@@ -10,6 +10,7 @@
   ],
   "scripts": {
     "dev": "npm run dev -w subedei_api",
+    "start": "npm run start -w subedei_api",
     "demo": "npm run demo -w subedei_api",
     "seed": "npm run seed -w subedei_api",
     "test": "npm run test -w subedei_api",
